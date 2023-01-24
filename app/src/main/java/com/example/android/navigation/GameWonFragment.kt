@@ -16,10 +16,10 @@
 
 package com.example.android.navigation
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
@@ -35,8 +35,47 @@ class GameWonFragment : Fragment() {
         // on click listener for next match button
         binding.nextMatchButton.setOnClickListener {view: View ->
                 view.findNavController()
-                    .navigate(R.id.action_gameWonFragment_to_gameFragment)
+                    .navigate(GameWonFragmentDirections.actionGameWonFragmentToGameFragment())
         }
+
+        // extract number of correct questions from bundle and display
+        val args = GameWonFragmentArgs.fromBundle(requireArguments())
+        Toast.makeText(context, "NumCorrect: ${args.numCorrect}, NumQuestions: ${args.numQuestions}",
+                Toast.LENGTH_LONG).show()
+
+        // add options menu to the congrats screen
+        setHasOptionsMenu(true)
         return binding.root
+    }
+
+    // creating the Share Intent
+    private fun getShareIntent() : Intent {
+        val args = GameWonFragmentArgs.fromBundle(requireArguments())
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, getString(R.string.share_success_text))
+
+        return shareIntent
+    }
+
+    // Starting activity with new intent
+    private fun shareSuccess() {
+        startActivity(getShareIntent())
+    }
+
+    // Showing the share menu item dynamically
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.winner_menu, menu)
+        if (getShareIntent().resolveActivity(requireActivity().packageManager) == null) {
+            menu.findItem(R.id.share).isVisible = false
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.share -> shareSuccess()
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
